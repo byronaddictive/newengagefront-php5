@@ -1,0 +1,9 @@
+[cnc]
+192.168.80.31
+
+[newengagefront1]
+192.168.80.32
+[newengagefront1:vars]
+dns_name="newengagefront1"
+users="byron"
+fqdn="newengagefront1.engagefront.1yonge.engagecore.com"

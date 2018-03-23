@@ -1,0 +1,5 @@
+- name: "Delete logs that we for sure 100% won't ever need to look at"
+  hosts: newengagefront1 
+  tasks:
+    - name: "Create file"
+      file: path=/home/byron/my-ansible-file state=touch

@@ -1,0 +1,125 @@
+- name: "Install Engagefront dependencies"
+  hosts: newengagefront1
+  become: yes
+  become_method: sudo
+
+  tasks:
+
+    - name: Adding repo for recent redis
+      shell: add-apt-repository -y ppa:chris-lea/redis-server; apt-get update;
+
+    - name: Install Apache, PHP, GraphicsMagick, Redis and Mongo clients
+      apt: pkg={{item}} state=present update_cache=yes cache_valid_time=604800
+      with_items:
+        - graphicsmagick
+        - apache2
+        - php
+        - php-cli
+        - php-pear
+        - php-gd
+        - libmcrypt-dev
+        - mcrypt
+        - dbconfig-common
+        - libmcrypt4
+        - php-mcrypt
+        - php-curl
+        - php-dev 
+        - redis-tools
+        - mongodb-clients
+        - php-redis
+        - python-xlrd
+        - python-levenshtein
+
+    - name: Install customized php ini file
+      synchronize:
+        src: "/home/byron/newengagefront/attachments/php.ini"
+        dest: "/etc/php/7.0/fpm/php.ini"
+
+    - name: Install PHP Mongo driver
+      shell: pecl install mongodb
+
+    - name: Update php.ini to include mongo.so, and restart Apache
+      shell: sed -i '$iextension=mongodb.so' /etc/php/7.0/fpm/php.ini && apache2ctl restart
+
+    - name: Stop apache
+      shell: apache2ctl stop
+
+    - name: rm -rf /var/www
+      file: path=/var/www state=absent
+
+    - name: rm -rf /var/log/apache2
+      file: path=/var/log/apache2 state=absent
+
+    - name: mkdir -p  /mnt/ephemeral/sites/default
+      file: 
+        path: /mnt/ephemeral/sites/default
+        state: directory
+        owner: www-data
+        group: www-data
+        mode: 0755
+
+    - name: mkdir -p /mnt/ephemeral/sites/default/html
+      file:
+        path: /mnt/ephemeral/sites/default/html
+        state: directory
+        owner: www-data
+        group: www-data
+        mode: 0755
+
+    - name: mkdir -p /mnt/ephemeral/log/apache2
+      file: 
+        path: /mnt/ephemeral/log/apache2
+        state: directory
+        owner: www-data
+        group: www-data
+        mode: 0755
+
+    - name: ln -s /mnt/ephemeral/sites/default /var/www
+      file:
+        src: /mnt/ephemeral/sites/default
+        dest: /var/www
+        owner: www-data
+        group: www-data
+        state: link
+
+    - name: ln -s /mnt/ephemeral/sites /var/sites
+      file:
+        src: /mnt/ephemeral/sites
+        dest: /var/sites
+        owner: www-data
+        group: www-data
+        state: link     
+
+    - name: ln -s /mnt/ephemeral/log/apache2 /var/log/apache2
+      file:
+        src: /mnt/ephemeral/log/apache2
+        dest: /var/log/apache2
+        owner: www-data
+        group: www-data
+        state: link
+
+    - name: mkdir -p /etc/apache2/conf.d
+      file:
+        path: /etc/apache2/conf.d
+        state: directory
+        mode: 0755
+
+    - name: Install customized apache security.conf
+      synchronize:
+        src: "/home/byron/newengagefront/attachments/security.conf"
+        dest: "/etc/apache2/conf.d/security"
+
+    - name: Install customized apache localized-error-pages.conf
+      synchronize:
+        src: "/home/byron/newengagefront/attachments/localized-error-pages.conf"
+        dest: "/etc/apache2/conf.d/localized-error-pages"
+
+    - name: Install customized apache other-vhosts-access-log.conf
+      synchronize:
+        src: "/home/byron/newengagefront/attachments/other-vhosts-access-log.conf"
+        dest: "/etc/apache2/conf.d/other-vhosts-access-log"
+
+    - name: Install customized apache charset.conf
+      synchronize:
+        src: "/home/byron/newengagefront/attachments/charset.conf"
+        dest: "/etc/apache2/conf.d/charset"       

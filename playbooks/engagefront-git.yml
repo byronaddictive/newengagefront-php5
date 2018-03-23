@@ -1,0 +1,39 @@
+- name: "Pull down relevant Git repos for Engagefront, create some symlinks and stuff too"
+  hosts: newengagefront1
+  become: yes
+  become_method: sudo
+
+  tasks:
+
+    - name: Clone Rolloutconsole repo
+      git:
+        repo: "ssh://git@github.com/amoa/rolloutconsole.git"
+        dest: /tmp/rolloutconsole
+        accept_hostkey: yes
+      delegate_to: "{{ groups['cnc'][0] }}"
+      become_user: byron
+
+    - name: sync proj to destination
+      synchronize:
+        src: "/tmp/rolloutconsole"
+        dest: "/opt/"
+        recursive: yes
+        rsync_opts:
+          - "--no-motd"
+          - "--exclude=.git" 
+
+    - name: Copy rollout console config file
+      copy:
+        src: /tmp/rolloutconsole/init/rollout.conf
+        dest: /etc/init/rollout.conf
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: ln -s /opt/rolloutconsole /var/sites/rollout
+      file:
+        src: /opt/rolloutconsole 
+        dest: /var/sites/rollout
+        owner: www-data
+        group: www-data
+        state: link
