@@ -25,6 +25,7 @@
         - dos2unix
         - git-core
         - python-software-properties
+        - pkg-config
 
     - name: Modify /etc/pam.d/common-session and add a line (only if it doesn't exist)
       shell: grep -q -F 'session required                        pam_limits.so' /etc/pam.d/common-session || echo 'session required                        pam_limits.so' >> /etc/pam.d/common-session
